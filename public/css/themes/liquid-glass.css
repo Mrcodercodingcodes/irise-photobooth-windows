@@ -1,0 +1,100 @@
+/* ==========================================================================
+   THEME: LIQUID GLASS (Luxury Black, Glassmorphism, Bodoni Moda & Jost)
+   High contrast, flowing translucent surfaces, elegant typography.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&family=Jost:ital,wght@0,300..700;1,300..700&display=swap');
+
+:root {
+  --theme-bg: #09090b;
+  --theme-bg-translucent: rgba(9, 9, 11, 0.75);
+  --theme-surface: rgba(24, 24, 27, 0.65);
+  --theme-surface-subtle: rgba(39, 39, 42, 0.5);
+  --theme-surface-border: rgba(255, 255, 255, 0.12);
+  
+  --theme-text: #FAFAFA;
+  --theme-text-muted: #A1A1AA;
+  --theme-text-dim: #71717A;
+  
+  --theme-accent: #FFFFFF;
+  --theme-accent-hover: #E4E4E7;
+  --theme-accent-contrast: #09090b;
+  --theme-accent-glow: rgba(255, 255, 255, 0.3);
+  
+  --theme-success: #10B981;
+  --theme-success-bg: rgba(16, 185, 129, 0.15);
+  --theme-danger: #EF4444;
+  --theme-danger-bg: rgba(239, 68, 68, 0.15);
+  
+  --theme-font-head: 'Bodoni Moda', Georgia, serif;
+  --theme-font-body: 'Jost', sans-serif;
+  
+  --theme-radius-sm: 8px;
+  --theme-radius-md: 14px;
+  --theme-radius-lg: 20px;
+  --theme-radius-full: 9999px;
+  
+  --theme-backdrop-blur: 16px;
+  
+  --theme-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --theme-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --theme-shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.6);
+}
+
+body {
+  background: radial-gradient(circle at 50% -20%, #1f1f28 0%, #09090b 70%);
+}
+
+.topbar,
+.botbar,
+.modal-panel,
+.qr-card,
+.sel-header,
+.photo-card {
+  backdrop-filter: blur(var(--theme-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--theme-backdrop-blur));
+}
+
+.chalkboard {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  background-color: #000000;
+}
+
+.cdown-number {
+  color: #FFFFFF;
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+  font-family: var(--theme-font-head);
+}
+
+.capture-instructions {
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #FAFAFA;
+}
+
+.btn-primary {
+  background: #FFFFFF;
+  color: #000000;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.25);
+}
+
+.btn-secondary {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.shot-dot {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.shot-dot.active {
+  background-color: #FFFFFF;
+  box-shadow: 0 0 12px #FFFFFF;
+}
+
+.shot-dot.done {
+  background-color: var(--theme-success);
+}

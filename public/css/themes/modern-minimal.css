@@ -1,0 +1,71 @@
+/* ==========================================================================
+   THEME: MODERN MINIMAL (Clean Studio Slate, Inter Typography)
+   Ultra-crisp lines, neutral gray palette, high clarity studio atmosphere.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+
+:root {
+  --theme-bg: #0f172a;
+  --theme-bg-translucent: rgba(15, 23, 42, 0.88);
+  --theme-surface: #1e293b;
+  --theme-surface-subtle: #334155;
+  --theme-surface-border: #475569;
+  
+  --theme-text: #f8fafc;
+  --theme-text-muted: #94a3b8;
+  --theme-text-dim: #64748b;
+  
+  --theme-accent: #38bdf8;
+  --theme-accent-hover: #0284c7;
+  --theme-accent-contrast: #0f172a;
+  --theme-accent-glow: rgba(56, 189, 248, 0.3);
+  
+  --theme-success: #10b981;
+  --theme-success-bg: rgba(16, 185, 129, 0.15);
+  --theme-danger: #f43f5e;
+  --theme-danger-bg: rgba(244, 63, 94, 0.15);
+  
+  --theme-font-head: 'Inter', system-ui, sans-serif;
+  --theme-font-body: 'Inter', system-ui, sans-serif;
+  --theme-font-mono: 'JetBrains Mono', monospace;
+  
+  --theme-radius-sm: 6px;
+  --theme-radius-md: 10px;
+  --theme-radius-lg: 14px;
+  --theme-radius-full: 9999px;
+  
+  --theme-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --theme-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --theme-shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.chalkboard {
+  border: 2px solid var(--theme-surface-border);
+  background-color: #020617;
+}
+
+.cdown-number {
+  color: var(--theme-accent);
+  text-shadow: 0 0 24px var(--theme-accent-glow);
+  font-family: var(--theme-font-head);
+}
+
+.capture-instructions {
+  background-color: var(--theme-surface);
+  border: 1px solid var(--theme-surface-border);
+  color: var(--theme-text);
+}
+
+.shot-dot {
+  background-color: var(--theme-surface-border);
+}
+
+.shot-dot.active {
+  background-color: var(--theme-accent);
+  box-shadow: 0 0 8px var(--theme-accent);
+}
+
+.shot-dot.done {
+  background-color: var(--theme-success);
+}

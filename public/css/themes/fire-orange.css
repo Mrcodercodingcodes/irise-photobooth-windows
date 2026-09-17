@@ -1,0 +1,76 @@
+/* ==========================================================================
+   THEME: FIRE ORANGE (Energetic, Neumorphic Depth, High Impact)
+   Signature iRISE orange accents, glowing highlights, dynamic gradients.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Jost:wght@400;500;600;700&display=swap');
+
+:root {
+  --theme-bg: #141416;
+  --theme-bg-translucent: rgba(20, 20, 22, 0.85);
+  --theme-surface: #1e1e22;
+  --theme-surface-subtle: #292930;
+  --theme-surface-border: #383842;
+  
+  --theme-text: #ffffff;
+  --theme-text-muted: #a3a3b0;
+  --theme-text-dim: #707080;
+  
+  --theme-accent: #ff5500;
+  --theme-accent-hover: #ff7722;
+  --theme-accent-contrast: #ffffff;
+  --theme-accent-glow: rgba(255, 85, 0, 0.4);
+  
+  --theme-success: #10b981;
+  --theme-success-bg: rgba(16, 185, 129, 0.15);
+  --theme-danger: #ef4444;
+  --theme-danger-bg: rgba(239, 68, 68, 0.15);
+  
+  --theme-font-head: 'Poppins', sans-serif;
+  --theme-font-body: 'Jost', sans-serif;
+  
+  --theme-radius-sm: 8px;
+  --theme-radius-md: 14px;
+  --theme-radius-lg: 22px;
+  --theme-radius-full: 9999px;
+  
+  --theme-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --theme-shadow-md: 0 8px 20px rgba(0, 0, 0, 0.5);
+  --theme-shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.65);
+}
+
+.chalkboard {
+  border: 3px solid var(--theme-accent);
+  box-shadow: 0 0 30px var(--theme-accent-glow), 0 10px 30px rgba(0, 0, 0, 0.7);
+  background-color: #0d0d0f;
+}
+
+.cdown-number {
+  color: var(--theme-accent);
+  text-shadow: 0 0 35px var(--theme-accent-glow);
+  font-family: var(--theme-font-head);
+}
+
+.capture-instructions {
+  background: linear-gradient(135deg, rgba(255, 85, 0, 0.2), rgba(20, 20, 22, 0.8));
+  border: 1px solid var(--theme-accent);
+  color: #ffffff;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #ff5500, #ff8800);
+  box-shadow: 0 6px 20px var(--theme-accent-glow);
+}
+
+.shot-dot {
+  background-color: var(--theme-surface-border);
+}
+
+.shot-dot.active {
+  background-color: var(--theme-accent);
+  box-shadow: 0 0 12px var(--theme-accent);
+}
+
+.shot-dot.done {
+  background-color: var(--theme-success);
+}

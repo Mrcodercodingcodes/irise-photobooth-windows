@@ -1,0 +1,21 @@
+{
+  "name": "iRISE Photobooth",
+  "short_name": "iRISE",
+  "description": "Premium Dynamic Capture Engine",
+  "start_url": "./",
+  "display": "fullscreen",
+  "background_color": "#09090b",
+  "theme_color": "#ff4d00",
+  "icons": [
+    {
+      "src": "irise-1777539339791.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "irise-1777539339791.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

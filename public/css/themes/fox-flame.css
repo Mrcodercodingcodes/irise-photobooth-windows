@@ -1,0 +1,66 @@
+/* ==========================================================================
+   THEME: FOX & FLAME // HIGH-ENERGY PHOTONICS & OPTICAL SPECIMEN LAB
+   Warm ivory laboratory paper, laser plasma amber, scientific monospace readouts.
+   ========================================================================== */
+
+:root {
+  --theme-bg: #FAF6EE;
+  --theme-bg-mid: #F3EBDD;
+  --theme-bg-subtle: #EBE0CD;
+  --theme-bg-translucent: rgba(250, 246, 238, 0.94);
+  
+  --theme-surface: #FFFFFF;
+  --theme-surface-hover: #FFFDF9;
+  --theme-surface-subtle: #F7F1E5;
+  --theme-surface-border: #E5D7C3;
+  --theme-surface-border-strong: #FF5500;
+
+  --theme-text: #1A1410;
+  --theme-text-cream: #2C221B;
+  --theme-text-muted: #6E5E50;
+  --theme-text-dim: #9C8C7C;
+
+  --theme-accent: #FF5500;           /* Pantone 021C Flame / Laser Amber */
+  --theme-accent-2: #FF7700;         /* Kinetic Tangerine */
+  --theme-accent-bright: #FFA000;    /* Photon Gold */
+  --theme-accent-hover: #E64600;
+  --theme-accent-contrast: #FFFFFF;
+  --theme-accent-glow: rgba(255, 85, 0, 0.38);
+  --theme-accent-gradient: linear-gradient(135deg, #FF3D00 0%, #FF6600 48%, #FFA000 100%);
+  --theme-accent-gradient-subtle: linear-gradient(135deg, rgba(255, 85, 0, 0.12) 0%, rgba(255, 160, 0, 0.08) 100%);
+
+  --theme-shadow-flame: 0 10px 30px rgba(255, 85, 0, 0.32);
+}
+
+/* ── Scientific Precision Laboratory Canvas ── */
+body {
+  background-color: #FAF6EE;
+  background-image:
+    /* Subtle 24px precision graph grid */
+    linear-gradient(to right, rgba(229, 215, 195, 0.45) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(229, 215, 195, 0.45) 1px, transparent 1px),
+    /* Warm optical radial light fields */
+    radial-gradient(ellipse 65% 45% at 10% 0%, rgba(255, 85, 0, 0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 40% at 90% 100%, rgba(255, 160, 0, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(250, 246, 238, 0.7) 0%, transparent 100%);
+  background-size: 24px 24px, 24px 24px, auto, auto, auto;
+  background-attachment: fixed;
+  color: #1A1410;
+}
+
+.topbar,
+.botbar {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* ── High-Energy Kinetic Button ── */
+.btn-primary {
+  background: linear-gradient(135deg, #FF3800 0%, #FF6600 50%, #FFA000 100%);
+  box-shadow: 0 4px 18px rgba(255, 85, 0, 0.38), 0 1px 0 rgba(255, 255, 255, 0.35) inset;
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 8px 30px rgba(255, 85, 0, 0.52), 0 0 25px rgba(255, 140, 0, 0.4);
+}

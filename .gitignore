@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Generated outputs
+exports/
+private_videos/
+temp_uploads/
+temp_prints/
+logs/*
+!logs/.gitkeep
+*.mp4
+*.webm
+sessions.json
+.firebase/
+
+# Secrets & config
+credentials.json
+credentials.*.json
+service-account*.json
+.tunnel-config.json
+.env
+
+# OS
+desktop.ini
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.suo
+*.user
+
+# Local/editor artifacts accidentally created outside the application
+matches.txt
+raw263.txt
+cd
+node
+npm
+rmdir
+set

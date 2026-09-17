@@ -1,0 +1,102 @@
+/* ==========================================================================
+   THEME: CLASSROOM (Retro School / Notebook / Blackboard)
+   Warm ink tones, ruled paper texture, chalk accents, classical typography.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Caveat:wght@400;600&display=swap');
+
+:root {
+  --theme-bg: #F6F3EA;
+  --theme-bg-translucent: rgba(246, 243, 234, 0.9);
+  --theme-surface: #FAF8F2;
+  --theme-surface-subtle: #EDE8D5;
+  --theme-surface-border: #DDD6BE;
+  
+  --theme-text: #1A1610;
+  --theme-text-muted: #6B6050;
+  --theme-text-dim: #8A8070;
+  
+  --theme-accent: #D24B42;
+  --theme-accent-hover: #B83A32;
+  --theme-accent-contrast: #FFFFFF;
+  --theme-accent-glow: rgba(210, 75, 66, 0.25);
+  
+  --theme-success: #3E7A54;
+  --theme-success-bg: #EAF4EE;
+  --theme-danger: #B23A3A;
+  --theme-danger-bg: #FBEAEA;
+  
+  --theme-font-head: 'Playfair Display', Georgia, serif;
+  --theme-font-body: 'EB Garamond', Georgia, serif;
+  --theme-font-script: 'Caveat', cursive;
+  
+  --theme-radius-sm: 4px;
+  --theme-radius-md: 6px;
+  --theme-radius-lg: 8px;
+  --theme-radius-full: 9999px;
+  
+  --theme-shadow-sm: 0 1px 3px rgba(26, 22, 16, 0.08);
+  --theme-shadow-md: 0 4px 12px rgba(26, 22, 16, 0.12);
+  --theme-shadow-lg: 0 12px 28px rgba(26, 22, 16, 0.18);
+  
+  --rule-line: #BBCFDF;
+}
+
+/* Notebook Ruled Background */
+body {
+  background-image: repeating-linear-gradient(
+    transparent 0px,
+    transparent 35px,
+    var(--rule-line) 35px,
+    var(--rule-line) 36px
+  );
+  background-attachment: fixed;
+}
+
+/* Blackboard Border on Camera */
+.chalkboard {
+  border: 8px solid #8B5E3C;
+  outline: 2px solid #5C3A21;
+  background-color: #1C3228;
+}
+
+.cdown-number {
+  color: #EDEAE0;
+  text-shadow: 0 0 20px rgba(237, 234, 224, 0.8), 2px 2px 4px rgba(0, 0, 0, 0.6);
+  font-family: var(--theme-font-script);
+}
+
+.capture-instructions {
+  background-color: rgba(28, 50, 40, 0.85);
+  color: #EDEAE0;
+  border: 1px dashed rgba(237, 234, 224, 0.4);
+  font-family: var(--theme-font-script);
+  font-size: 1.15rem;
+}
+
+/* Buttons Theme Accents */
+.btn-primary {
+  background: var(--theme-accent);
+  border-bottom: 2px solid #A83A32;
+}
+
+.btn-secondary {
+  border: 1.5px solid var(--theme-surface-border);
+  background: #FFFFFF;
+}
+
+/* Dot Progress */
+.shot-dot {
+  background-color: var(--theme-surface-border);
+  border: 1px solid var(--theme-surface-border);
+}
+
+.shot-dot.active {
+  background-color: var(--theme-accent);
+  border-color: #A83A32;
+}
+
+.shot-dot.done {
+  background-color: var(--theme-success);
+  border-color: var(--theme-success);
+}

@@ -1,0 +1,41 @@
+{
+  "name": "irise-photobooth",
+  "version": "1.0.0",
+  "description": "Local Windows photobooth server with video processing, printing, and QR sharing",
+  "main": "print-server.js",
+  "scripts": {
+    "start": "node print-server.js",
+    "dev": "node --watch print-server.js",
+    "check": "node --check print-server.js && node --check lib/slotDetection.js && node --check lib/skinStore.js && node --check scan-slots.js && node --check analyze-slots.js && node --check migrate-legacy-skins.js",
+    "verify:install": "node scripts/verify-install.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop irise-photobooth",
+    "pm2:restart": "pm2 restart irise-photobooth",
+    "pm2:logs": "pm2 logs irise-photobooth",
+    "pm2:save": "pm2 save",
+    "test": "npm run check",
+    "build": "echo \"Static site — no build step required\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "@snap/camera-kit": "^1.17.0",
+    "body-parser": "^2.2.2",
+    "bwip-js": "^4.11.1",
+    "cloudflared": "^0.7.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "ffmpeg-static": "^5.3.0",
+    "firebase-admin": "^13.8.0",
+    "fluent-ffmpeg": "^2.1.3",
+    "googleapis": "^171.4.0",
+    "multer": "^2.1.1",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.34.5"
+  }
+}

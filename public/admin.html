@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skin Manager — iRISE Photobooth</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --paper: #F6F3EA;
+      --paper-mid: #EDE8D5;
+      --paper-dark: #DDD6BE;
+      --ink: #1A1610;
+      --ink-mid: #3D3628;
+      --ink-light: #6B6050;
+      --accent: #D24B42;
+      --accent-dark: #A83A32;
+      --success: #3E7A54;
+      --success-bg: #EAF4EE;
+      --error: #B23A3A;
+      --error-bg: #FBEAEA;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      font-family: 'EB Garamond', Georgia, serif;
+      background: var(--paper);
+      color: var(--ink);
+      padding: 40px 24px 80px;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 600;
+    }
+
+    .wrap { max-width: 960px; margin: 0 auto; }
+
+    .eyebrow {
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-dark);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    h1 { font-size: 34px; margin-bottom: 6px; }
+    .sub { color: var(--ink-light); font-size: 16px; margin-bottom: 36px; }
+
+    /* ---- login gate ---- */
+    #loginScreen {
+      max-width: 380px;
+      margin: 80px auto;
+      background: #fff;
+      border: 1px solid var(--paper-dark);
+      border-radius: 10px;
+      padding: 32px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    }
+    #loginScreen h1 { font-size: 24px; margin-bottom: 20px; }
+    #loginScreen input {
+      width: 100%;
+      font-family: 'EB Garamond', serif;
+      font-size: 16px;
+      padding: 11px 12px;
+      border: 1.5px solid var(--paper-dark);
+      border-radius: 6px;
+      background: var(--paper);
+      color: var(--ink);
+      margin-bottom: 14px;
+    }
+    #loginError { color: var(--error); font-size: 14px; margin-bottom: 10px; display: none; }
+
+    .btn {
+      font-family: 'EB Garamond', serif;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.02em;
+      border-radius: 6px;
+      padding: 11px 20px;
+      border: 1.5px solid var(--paper-dark);
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn:hover { border-color: var(--ink-light); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); border-color: var(--accent-dark); color: #fff; }
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-danger { color: var(--error); border-color: var(--error); background: #fff; }
+    .btn-danger:hover { background: var(--error-bg); }
+    .btn-full { width: 100%; }
+
+    /* ---- app shell ---- */
+    #app { display: none; }
+
+    .panel {
+      background: #fff;
+      border: 1px solid var(--paper-dark);
+      border-radius: 10px;
+      padding: 28px;
+      margin-bottom: 28px;
+    }
+
+    /* ---- upload dropzone ---- */
+    .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .dropzone {
+      border: 2px dashed var(--paper-dark);
+      border-radius: 8px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+      background: var(--paper);
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .dropzone:hover, .dropzone.drag-over { border-color: var(--accent); background: #fff9f2; }
+    .dropzone .dz-label { font-weight: 700; font-size: 15px; }
+    .dropzone .dz-hint { font-size: 13px; color: var(--ink-light); }
+    .dropzone img { max-width: 100%; max-height: 220px; border-radius: 4px; object-fit: contain; }
+
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+    .field input[type="text"] {
+      width: 100%;
+      font-family: 'EB Garamond', serif;
+      font-size: 16px;
+      padding: 10px 12px;
+      border: 1.5px solid var(--paper-dark);
+      border-radius: 6px;
+      background: var(--paper);
+    }
+
+    .status-msg { font-size: 14px; padding: 10px 12px; border-radius: 6px; margin-bottom: 16px; display: none; }
+    .status-msg.error { background: var(--error-bg); color: var(--error); display: block; }
+    .status-msg.success { background: var(--success-bg); color: var(--success); display: block; }
+    .status-msg.info { background: var(--paper-mid); color: var(--ink-mid); display: block; }
+
+    /* ---- slot preview / confirm ---- */
+    #previewSection { display: none; }
+    .preview-canvas-wrap {
+      position: relative;
+      display: inline-block;
+      max-width: 100%;
+      border: 1px solid var(--paper-dark);
+      border-radius: 6px;
+      overflow: hidden;
+      background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 16px 16px;
+    }
+    .preview-canvas-wrap img { display: block; max-width: 100%; height: auto; }
+    .slot-box {
+      position: absolute;
+      border: 2px solid var(--accent);
+      background: rgba(210, 75, 66, 0.12);
+      box-sizing: border-box;
+    }
+    .slot-box .slot-num {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-family: 'EB Garamond', serif;
+    }
+    .slot-count-note { font-size: 14px; color: var(--ink-light); margin: 12px 0; }
+    .preview-actions { display: flex; gap: 12px; margin-top: 20px; }
+
+    /* ---- skin library ---- */
+    .skins-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 18px;
+    }
+    .skin-card {
+      border: 1px solid var(--paper-dark);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--paper);
+    }
+    .skin-card.disabled { opacity: 0.5; }
+    .skin-card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: contain;
+      background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 14px 14px;
+      display: block;
+    }
+    .skin-card-body { padding: 10px 12px; }
+    .skin-card-name { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+    .skin-card-meta { font-size: 12px; color: var(--ink-light); margin-bottom: 10px; }
+    .skin-card-actions { display: flex; gap: 6px; }
+    .skin-card-actions .btn { flex: 1; padding: 6px 8px; font-size: 13px; }
+
+    .empty-note { color: var(--ink-light); font-size: 15px; padding: 20px 0; text-align: center; }
+  </style>
+</head>
+
+<body>
+
+  <!-- ============ LOGIN GATE ============ -->
+  <div id="loginScreen">
+    <h1>Skin Manager</h1>
+    <div id="loginError">Incorrect password.</div>
+    <input type="password" id="passwordInput" placeholder="Admin password" autocomplete="current-password">
+    <button class="btn btn-primary btn-full" id="loginBtn" type="button">Log in</button>
+  </div>
+
+  <!-- ============ MAIN APP ============ -->
+  <div id="app">
+    <div class="wrap">
+      <div class="eyebrow">iRISE Photobooth</div>
+      <h1>Skin Manager</h1>
+      <p class="sub">Upload a blueprint (white/transparent = photo slots) and its matching design art. The server detects slot positions automatically — confirm or nudge them, then save.</p>
+
+      <!-- Upload panel -->
+      <div class="panel">
+        <h2 style="font-size:20px; margin-bottom:16px;">Add a new skin</h2>
+        <div id="uploadStatus" class="status-msg"></div>
+
+        <div class="upload-grid">
+          <div>
+            <div class="dropzone" id="rawDropzone">
+              <div class="dz-label">Raw blueprint</div>
+              <div class="dz-hint">white/transparent = photo slots<br>click or drag a PNG</div>
+            </div>
+            <input type="file" id="rawInput" accept="image/png" style="display:none;">
+          </div>
+          <div>
+            <div class="dropzone" id="designDropzone">
+              <div class="dz-label">Design art</div>
+              <div class="dz-hint">the finished skin overlay<br>click or drag a PNG</div>
+            </div>
+            <input type="file" id="designInput" accept="image/png" style="display:none;">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="skinNameInput">Skin name</label>
+          <input type="text" id="skinNameInput" placeholder="e.g. Brigada Eskwela 2026">
+        </div>
+
+        <button class="btn btn-primary" id="analyzeBtn" type="button" disabled>Detect slots</button>
+
+        <!-- Slot confirmation preview -->
+        <div id="previewSection">
+          <h3 style="font-size:16px; margin: 24px 0 10px;">Confirm detected slots</h3>
+          <div class="preview-canvas-wrap" id="previewCanvasWrap"></div>
+          <div class="slot-count-note" id="slotCountNote"></div>
+          <div class="preview-actions">
+            <button class="btn btn-primary" id="confirmSaveBtn" type="button">Save skin</button>
+            <button class="btn" id="cancelPreviewBtn" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skin library -->
+      <div class="panel">
+        <h2 style="font-size:20px; margin-bottom:16px;">Skin library</h2>
+        <div id="skinsGrid" class="skins-grid"></div>
+        <div id="skinsEmpty" class="empty-note" style="display:none;">No skins yet — add one above.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function getServerUrl(p) {
+      const localHosts = ['localhost', '127.0.0.1', '::1'];
+      const base = localHosts.includes(window.location.hostname) && window.location.port !== '5500'
+        ? window.location.origin
+        : 'http://localhost:8080';
+      return `${base}${p}`;
+    }
+
+    let adminToken = sessionStorage.getItem('irise_admin_token') || '';
+    let rawFile = null, designFile = null;
+    let lastPreview = null; // { width, height, slots }
+
+    /* ---------- login ---------- */
+    async function tryLogin() {
+      const password = document.getElementById('passwordInput').value;
+      const errEl = document.getElementById('loginError');
+      errEl.style.display = 'none';
+      try {
+        const res = await fetch(getServerUrl('/admin/login'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.token) throw new Error(data.error || 'Login failed');
+        adminToken = data.token;
+        sessionStorage.setItem('irise_admin_token', adminToken);
+        showApp();
+      } catch (err) {
+        errEl.textContent = err.message === 'Incorrect password' ? 'Incorrect password.' : 'Could not reach the server. Is print-server.js running?';
+        errEl.style.display = 'block';
+      }
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', tryLogin);
+    document.getElementById('passwordInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+
+    function showApp() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadSkinLibrary();
+    }
+
+    // If a token from a previous session is still around, verify it's actually
+    // valid before trusting it — tokens are cleared server-side on restart, so
+    // a stale one in sessionStorage would otherwise show the app UI and then
+    // fail confusingly on the first real action.
+    (async function tryResumeSession() {
+      if (!adminToken) return;
+      try {
+        const res = await fetch(getServerUrl('/admin/verify'), { headers: { 'x-admin-token': adminToken } });
+        if (res.ok) { showApp(); }
+        else { sessionStorage.removeItem('irise_admin_token'); adminToken = ''; }
+      } catch (e) {
+        // server unreachable — leave the login screen up rather than guessing
+      }
+    })();
+
+    /* ---------- dropzones ---------- */
+    function wireDropzone(zoneId, inputId, onFile) {
+      const zone = document.getElementById(zoneId);
+      const input = document.getElementById(inputId);
+      zone.addEventListener('click', () => input.click());
+      input.addEventListener('change', () => { if (input.files[0]) onFile(input.files[0], zone); });
+      zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) onFile(file, zone);
+      });
+    }
+
+    function previewInZone(zone, file, label) {
+      const url = URL.createObjectURL(file);
+      zone.innerHTML = `<img src="${url}" alt="${label} preview">`;
+    }
+
+    wireDropzone('rawDropzone', 'rawInput', (file, zone) => {
+      rawFile = file;
+      previewInZone(zone, file, 'Raw blueprint');
+      checkReadyToAnalyze();
+    });
+    wireDropzone('designDropzone', 'designInput', (file, zone) => {
+      designFile = file;
+      previewInZone(zone, file, 'Design art');
+      checkReadyToAnalyze();
+    });
+
+    function checkReadyToAnalyze() {
+      document.getElementById('analyzeBtn').disabled = !(rawFile && designFile);
+    }
+
+    function showStatus(msg, type) {
+      const el = document.getElementById('uploadStatus');
+      el.textContent = msg;
+      el.className = 'status-msg ' + type;
+    }
+    function clearStatus() {
+      const el = document.getElementById('uploadStatus');
+      el.className = 'status-msg';
+      el.textContent = '';
+    }
+
+    /* ---------- analyze / preview ---------- */
+    document.getElementById('analyzeBtn').addEventListener('click', async () => {
+      if (!rawFile || !designFile) return;
+      clearStatus();
+      const btn = document.getElementById('analyzeBtn');
+      btn.disabled = true;
+      btn.textContent = 'Analyzing…';
+
+      try {
+        const formData = new FormData();
+        formData.append('raw', rawFile);
+        formData.append('design', designFile);
+
+        const res = await fetch(getServerUrl('/admin/skins/preview'), {
+          method: 'POST',
+          headers: { 'x-admin-token': adminToken },
+          body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Analysis failed');
+
+        lastPreview = data;
+        renderSlotPreview(data);
+      } catch (err) {
+        showStatus(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Detect slots';
+      }
+    });
+
+    function renderSlotPreview(data) {
+      const wrap = document.getElementById('previewCanvasWrap');
+      wrap.innerHTML = '';
+
+      const img = document.createElement('img');
+      img.src = data.rawPreview;
+      wrap.appendChild(img);
+
+      img.onload = () => {
+        // Position slot boxes as percentages so they scale with the displayed image size
+        data.slots.forEach((slot, i) => {
+          const box = document.createElement('div');
+          box.className = 'slot-box';
+          box.style.left = (slot.x / data.width * 100) + '%';
+          box.style.top = (slot.y / data.height * 100) + '%';
+          box.style.width = (slot.w / data.width * 100) + '%';
+          box.style.height = (slot.h / data.height * 100) + '%';
+          box.innerHTML = `<span class="slot-num">${i + 1}</span>`;
+          wrap.appendChild(box);
+        });
+      };
+
+      document.getElementById('slotCountNote').textContent =
+        `${data.slots.length} slot${data.slots.length === 1 ? '' : 's'} detected at ${data.width}×${data.height}px. ` +
+        `If this looks wrong, check that slot areas in the raw image are pure white or fully transparent, then re-upload.`;
+
+      document.getElementById('previewSection').style.display = 'block';
+      document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    document.getElementById('cancelPreviewBtn').addEventListener('click', () => {
+      document.getElementById('previewSection').style.display = 'none';
+      lastPreview = null;
+    });
+
+    /* ---------- confirm & save ---------- */
+    document.getElementById('confirmSaveBtn').addEventListener('click', async () => {
+      const name = document.getElementById('skinNameInput').value.trim();
+      if (!name) { showStatus('Give the skin a name before saving.', 'error'); return; }
+      if (!lastPreview || !rawFile || !designFile) return;
+
+      const btn = document.getElementById('confirmSaveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+
+      try {
+        const formData = new FormData();
+        formData.append('raw', rawFile);
+        formData.append('design', designFile);
+        formData.append('name', name);
+        formData.append('width', lastPreview.width);
+        formData.append('height', lastPreview.height);
+        formData.append('slots', JSON.stringify(lastPreview.slots));
+
+        const res = await fetch(getServerUrl('/admin/skins'), {
+          method: 'POST',
+          headers: { 'x-admin-token': adminToken },
+          body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Save failed');
+
+        showStatus(`Saved "${name}". It's now available in the photobooth's design picker.`, 'success');
+        resetUploadForm();
+        loadSkinLibrary();
+      } catch (err) {
+        showStatus(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save skin';
+      }
+    });
+
+    function resetUploadForm() {
+      rawFile = null; designFile = null; lastPreview = null;
+      document.getElementById('rawDropzone').innerHTML = '<div class="dz-label">Raw blueprint</div><div class="dz-hint">white/transparent = photo slots<br>click or drag a PNG</div>';
+      document.getElementById('designDropzone').innerHTML = '<div class="dz-label">Design art</div><div class="dz-hint">the finished skin overlay<br>click or drag a PNG</div>';
+      document.getElementById('skinNameInput').value = '';
+      document.getElementById('rawInput').value = '';
+      document.getElementById('designInput').value = '';
+      document.getElementById('previewSection').style.display = 'none';
+      checkReadyToAnalyze();
+    }
+
+    /* ---------- skin library ---------- */
+    async function loadSkinLibrary() {
+      const grid = document.getElementById('skinsGrid');
+      const empty = document.getElementById('skinsEmpty');
+      try {
+        const res = await fetch(getServerUrl('/skins?all=true'));
+        const skins = await res.json();
+
+        if (!skins.length) {
+          grid.innerHTML = '';
+          empty.style.display = 'block';
+          return;
+        }
+        empty.style.display = 'none';
+
+        grid.innerHTML = skins.map(s => `
+          <div class="skin-card ${s.enabled ? '' : 'disabled'}" data-id="${s.id}">
+            <img src="${getServerUrl(s.designUrl)}" alt="${escapeHtml(s.name)}">
+            <div class="skin-card-body">
+              <div class="skin-card-name">${escapeHtml(s.name)}</div>
+              <div class="skin-card-meta">${s.slots.length} slot${s.slots.length === 1 ? '' : 's'} · ${s.enabled ? 'active' : 'hidden'}</div>
+              <div class="skin-card-actions">
+                <button class="btn toggle-btn" data-id="${s.id}" data-enabled="${s.enabled}">${s.enabled ? 'Hide' : 'Show'}</button>
+                <button class="btn btn-danger delete-btn" data-id="${s.id}">Delete</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        grid.querySelectorAll('.toggle-btn').forEach(btn => {
+          btn.addEventListener('click', () => toggleSkin(btn.dataset.id, btn.dataset.enabled !== 'true'));
+        });
+        grid.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', () => deleteSkin(btn.dataset.id));
+        });
+      } catch (err) {
+        empty.textContent = 'Could not load skins from the server.';
+        empty.style.display = 'block';
+      }
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    async function toggleSkin(id, enabled) {
+      await fetch(getServerUrl(`/admin/skins/${id}`), {
+        method: 'PATCH',
+        headers: { 'x-admin-token': adminToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled })
+      });
+      loadSkinLibrary();
+    }
+
+    async function deleteSkin(id) {
+      if (!confirm('Delete this skin? This can\'t be undone.')) return;
+      await fetch(getServerUrl(`/admin/skins/${id}`), {
+        method: 'DELETE',
+        headers: { 'x-admin-token': adminToken }
+      });
+      loadSkinLibrary();
+    }
+
+    /* ---------- boot ---------- */
+    // (session resume happens in tryResumeSession() above)
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iRISE Photobooth | Your Media</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Caveat:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css">
+    <style>
+        /* ═══════════════════════════════════════════
+           BASE RESET
+        ═══════════════════════════════════════════ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ═══════════════════════════════════════════
+           THEME: MODERN
+        ═══════════════════════════════════════════ */
+        body.theme-modern {
+            background-color: #f4f4f5;
+            color: #0f172a;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .theme-modern .app-container {
+            max-width: 440px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        .theme-modern .app-container.wide {
+            max-width: 800px;
+        }
+
+        .theme-modern .disclaimer {
+            background: #fffbeb;
+            color: #92400e;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #fcd34d;
+            font-size: 0.85rem;
+            text-align: center;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .theme-modern .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .theme-modern .header h1 .brand {
+            color: #f97316;
+            text-shadow: 0 0 15px rgba(249, 115, 22, 0.4);
+        }
+
+        .theme-modern .header p {
+            font-size: 0.95rem;
+            color: #64748b;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .theme-modern .search-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        }
+
+        .theme-modern .code-input {
+            width: 100%;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 18px;
+            font-size: 1.5rem;
+            font-family: monospace;
+            font-weight: 600;
+            color: #0f172a;
+            text-align: center;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+            text-indent: 0.5em;
+        }
+
+        .theme-modern .code-input:focus {
+            outline: none;
+            border-color: #f97316;
+            box-shadow: 0 0 0 1px #f97316, 0 0 12px rgba(249, 115, 22, 0.4), inset 0 0 6px rgba(249, 115, 22, 0.15);
+            background: #ffffff;
+        }
+
+        .theme-modern .code-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .theme-modern .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: #fdfbf7;
+            color: #0f172a;
+            border: 1px solid #f97316;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 0 12px rgba(249, 115, 22, 0.4), inset 0 0 6px rgba(249, 115, 22, 0.15);
+        }
+
+        .theme-modern .btn-primary i {
+            color: #f97316;
+            filter: drop-shadow(0 0 5px rgba(249, 115, 22, 0.4));
+        }
+
+        .theme-modern .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.7), inset 0 0 10px rgba(249, 115, 22, 0.3);
+            transform: translateY(-2px);
+            background: #ffffff;
+        }
+
+        .theme-modern .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .theme-modern .btn-secondary {
+            width: 100%;
+            padding: 14px;
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .theme-modern .btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .theme-modern .status-msg {
+            text-align: center;
+            font-size: 0.875rem;
+            color: #64748b;
+            min-height: 20px;
+        }
+
+        .theme-modern .footer {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 40px;
+        }
+
+        .theme-modern .footer a {
+            color: #64748b;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+
+        .theme-modern .footer a:hover {
+            color: #0f172a;
+        }
+
+        .theme-modern .media-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 640px) {
+            .theme-modern .media-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .theme-modern .media-item {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .theme-modern .media-container-box {
+            background: #f8fafc;
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 9/16;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+
+        .theme-modern .media-container-box video,
+        .theme-modern .media-container-box img,
+        .theme-modern .media-container-box iframe {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: none;
+        }
+
+        .theme-modern .media-container-box img {
+            object-fit: contain;
+        }
+
+        /* Modal: modern */
+        .theme-modern .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .theme-modern .modal-content {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .theme-modern .modal-content h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 12px;
+        }
+
+        .theme-modern .modal-content p {
+            font-size: 0.95rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        /* Loader: modern */
+        .theme-modern .loader {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #f97316;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* ═══════════════════════════════════════════
+           THEME: CLASSROOM
+        ═══════════════════════════════════════════ */
+        body.theme-classroom {
+            background-color: #F6F3EA;
+            color: #1A1610;
+            font-family: 'EB Garamond', Georgia, serif;
+            background-image: repeating-linear-gradient(transparent 0px, transparent 35px, #BBCFDF 35px, #BBCFDF 36px);
+            background-attachment: fixed;
+        }
+
+        .theme-classroom .app-container {
+            max-width: 480px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        .theme-classroom .app-container.wide {
+            max-width: 800px;
+        }
+
+        .theme-classroom .binder-holes {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 56px;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 72px;
+            gap: 200px;
+        }
+
+        .theme-classroom .hole {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+
+        .theme-classroom .page-margin {
+            position: fixed;
+            top: 0;
+            left: 88px;
+            width: 2px;
+            height: 100%;
+            background: #D24B42;
+            opacity: 0.45;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .theme-classroom .disclaimer {
+            background: rgba(210, 75, 66, 0.08);
+            color: #D24B42;
+            padding: 12px 16px;
+            border-radius: 2px;
+            border: 1px dashed #D24B42;
+            font-size: 0.95rem;
+            text-align: center;
+            font-weight: 500;
+            font-family: 'Caveat', cursive;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .theme-classroom .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            margin-bottom: 8px;
+            text-align: center;
+            color: #1A1610;
+        }
+
+        .theme-classroom .header h1 .brand {
+            color: #D24B42;
+            text-shadow: none;
+        }
+
+        .theme-classroom .header p {
+            font-family: 'Caveat', cursive;
+            font-size: 1.2rem;
+            color: #6B6050;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .theme-classroom .search-card {
+            background: white;
+            border: 1px solid #DDD6BE;
+            border-radius: 2px;
+            padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+
+        .theme-classroom .search-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 3px;
+            background: #D24B42;
+            border-radius: 2px 0 0 2px;
+        }
+
+        .theme-classroom .code-input {
+            width: 100%;
+            background: #F6F3EA;
+            border: 1px solid #DDD6BE;
+            border-radius: 2px;
+            padding: 18px;
+            font-size: 1.5rem;
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            color: #1A1610;
+            text-align: center;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+            text-indent: 0.5em;
+        }
+
+        .theme-classroom .code-input:focus {
+            outline: none;
+            border-color: #D24B42;
+            box-shadow: 0 0 0 2px rgba(210, 75, 66, 0.25);
+            background: #ffffff;
+        }
+
+        .theme-classroom .code-input::placeholder {
+            color: #8A8070;
+        }
+
+        .theme-classroom .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: #1C3228;
+            color: #EDEAE0;
+            border: none;
+            border-radius: 2px;
+            font-family: 'Caveat', cursive;
+            font-size: 1.15rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-classroom .btn-primary i {
+            color: #EDEAE0;
+            filter: none;
+        }
+
+        .theme-classroom .btn-primary:hover {
+            background: #243D31;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-classroom .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .theme-classroom .btn-secondary {
+            width: 100%;
+            padding: 14px;
+            background: #F6F3EA;
+            color: #3D3628;
+            border: 1px solid #DDD6BE;
+            border-radius: 2px;
+            font-family: 'Caveat', cursive;
+            font-size: 1.1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .theme-classroom .btn-secondary:hover {
+            background: #EDE8D5;
+            border-color: #c5bd9e;
+        }
+
+        .theme-classroom .status-msg {
+            text-align: center;
+            font-size: 1rem;
+            color: #8A8070;
+            min-height: 20px;
+            font-family: 'Caveat', cursive;
+        }
+
+        .theme-classroom .footer {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #8A8070;
+            font-family: 'Caveat', cursive;
+            margin-top: 40px;
+        }
+
+        .theme-classroom .footer a {
+            color: #8A8070;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+
+        .theme-classroom .footer a:hover {
+            color: #3D3628;
+        }
+
+        .theme-classroom .media-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 640px) {
+            .theme-classroom .media-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .theme-classroom .media-item {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .theme-classroom .media-container-box {
+            background: #F6F3EA;
+            border-radius: 2px;
+            overflow: hidden;
+            aspect-ratio: 9/16;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #DDD6BE;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .theme-classroom .media-container-box video,
+        .theme-classroom .media-container-box img,
+        .theme-classroom .media-container-box iframe {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: none;
+        }
+
+        .theme-classroom .media-container-box img {
+            object-fit: contain;
+        }
+
+        /* Modal: classroom */
+        .theme-classroom .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(28, 50, 40, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .theme-classroom .modal-content {
+            background: white;
+            border: 1px solid #DDD6BE;
+            border-radius: 2px;
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4), inset 0 0 40px rgba(0, 0, 0, 0.05);
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .theme-classroom .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 3px;
+            background: #D24B42;
+            border-radius: 2px 0 0 2px;
+        }
+
+        .theme-classroom .modal-content h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1A1610;
+            margin-bottom: 12px;
+        }
+
+        .theme-classroom .modal-content p {
+            font-family: 'EB Garamond', serif;
+            font-size: 1.05rem;
+            color: #6B6050;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        /* Loader: classroom */
+        .theme-classroom .loader {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #DDD6BE;
+            border-top-color: #D24B42;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* ── Shared ── */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .status-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            z-index: 10;
+        }
+
+        body.theme-modern .status-overlay {
+            background: #f4f4f5;
+        }
+
+        body.theme-classroom .status-overlay {
+            background: #F6F3EA;
+        }
+
+        .status-overlay p {
+            font-size: 0.9rem;
+        }
+
+        @keyframes modalPop {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Classroom-only decorations -->
+    <div class="binder-holes hidden">
+        <div class="hole"></div>
+        <div class="hole"></div>
+        <div class="hole"></div>
+    </div>
+    <div class="page-margin hidden"></div>
+
+    <!-- Buffering Modal -->
+    <div id="bufferingModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Experiencing Buffering?</h3>
+            <p>You can access your media directly via our high-speed cloud viewer instead.</p>
+            <p>Your unique code is <strong id="modalCodeWrap"><span id="modalCode"></span></strong> and will be applied
+                automatically.</p>
+            <a id="cloudViewerLink" href="#" target="_blank" class="btn-primary" style="margin-top: 24px;">
+                <i class="hgi-stroke hgi-cloud-link"></i>
+                <span>Open Cloud Viewer</span>
+            </a>
+            <button id="closeModalBtn" class="btn-secondary" style="margin-top: 12px; border: none;">
+                Continue Waiting
+            </button>
+        </div>
+    </div>
+
+    <div class="app-container" id="appContainer">
+        <div class="disclaimer">
+            <i class="hgi-stroke hgi-alert-01"></i>
+            This is a temporary local site and will not work after the booth leaves.
+        </div>
+
+        <header class="header">
+            <h1><span class="brand">iRISE</span> Archives</h1>
+            <p>Your captured memories are ready.</p>
+        </header>
+
+        <!-- Automatic View (when ?id is present) -->
+        <main id="automatic-view" class="hidden">
+            <div class="media-grid">
+                <div class="media-item">
+                    <div class="media-container-box">
+                        <div id="loading" class="status-overlay">
+                            <div class="loader"></div>
+                            <p>Loading Video...</p>
+                        </div>
+                        <video id="player" controls playsinline muted autoplay class="hidden"></video>
+                    </div>
+                    <a id="download-btn" href="#" download class="btn-secondary hidden">
+                        <i class="hgi-stroke hgi-download-04"></i>
+                        <span>Save Video</span>
+                    </a>
+                </div>
+                <div class="media-item">
+                    <div class="media-container-box">
+                        <div id="loading-photo" class="status-overlay">
+                            <div class="loader"></div>
+                            <p>Loading Photo Strip...</p>
+                        </div>
+                        <img id="photo-player" class="hidden" alt="Photo Strip" />
+                    </div>
+                    <a id="download-photo-btn" href="#" download class="btn-primary hidden">
+                        <i class="hgi-stroke hgi-image-01"></i>
+                        <span>Save Photo Strip</span>
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <!-- Search View (when no ?id is present) -->
+        <main id="search-view" class="search-card hidden">
+            <div class="input-group">
+                <input type="text" id="searchInput" class="code-input" maxlength="5" placeholder="CODE"
+                    autocomplete="off" spellcheck="false">
+                <button id="searchBtn" class="btn-primary">
+                    <i class="hgi-stroke hgi-search-02"></i>
+                    <span>Find Media</span>
+                </button>
+            </div>
+            <div id="search-results" class="hidden"></div>
+            <div id="video-fallback" class="hidden" style="margin-top: 16px;">
+                <a id="driveLink" href="#" target="_blank" class="btn-secondary">
+                    <i class="hgi-stroke hgi-link-01"></i>
+                    <span>Open in Google Drive</span>
+                </a>
+            </div>
+            <div id="search-status" class="status-msg">
+                Enter the 5-character code from your printout.
+            </div>
+        </main>
+
+        <footer class="footer">
+            <a href="https://www.facebook.com/iRISEMHPNHS" target="_blank">
+                <i class="hgi-stroke hgi-facebook-02"></i>
+                Follow our journey
+            </a>
+        </footer>
+    </div>
+
+    <script>
+        // ╔════════════════════════════════════════════════════╗
+        // ║  THEME TOGGLE — change this value to switch skin  ║
+        // ║  'modern'    = clean white + orange glow strokes  ║
+        // ║  'classroom' = notebook paper + chalkboard style  ║
+        // ╚════════════════════════════════════════════════════╝
+        const THEME = 'classroom';
+
+        // Apply theme
+        document.body.classList.add(`theme-${THEME}`);
+        if (THEME === 'classroom') {
+            document.querySelector('.binder-holes').classList.remove('hidden');
+            document.querySelector('.page-margin').classList.remove('hidden');
+        }
+
+        // Theme-aware accent color
+        const ACCENT_COLOR = THEME === 'classroom' ? '#D24B42' : '#f97316';
+
+        // Set modal code color to match theme
+        document.getElementById('modalCodeWrap').style.color = ACCENT_COLOR;
+
+        // Security Deterrents
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', event => {
+            if (event.key === 'F12' ||
+                (event.ctrlKey && event.shiftKey && event.key === 'I') ||
+                (event.ctrlKey && event.shiftKey && event.key === 'C') ||
+                (event.ctrlKey && event.shiftKey && event.key === 'J') ||
+                (event.ctrlKey && event.key === 'U')) {
+                event.preventDefault();
+            }
+        });
+
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZ0-Wcgww130AGZEm-Ka66nAHjz-MBan7lb2fxW8KcummpSJkoL74i6c3dsrkY24j1cA/exec';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('id');
+        const tunnelUrl = urlParams.get('t');
+
+        const appContainer = document.getElementById('appContainer');
+        const autoView = document.getElementById('automatic-view');
+        const searchView = document.getElementById('search-view');
+        const videoElement = document.getElementById('player');
+        const loadingElement = document.getElementById('loading');
+        const downloadBtn = document.getElementById('download-btn');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchStatus = document.getElementById('search-status');
+
+        function getMediaBaseCandidates() {
+            const bases = [];
+            if (tunnelUrl) bases.push(tunnelUrl.replace(/\/$/, ''));
+            bases.push(window.location.origin);
+            return [...new Set(bases.filter(Boolean))];
+        }
+
+        function setElementSourceWithFallback(element, paths, onReady, onMissing) {
+            let attempt = 0;
+            const maxAttempts = 20; // Try for up to 30 seconds while FFmpeg encodes
+
+            const tryLoad = () => {
+                let index = 0;
+                const tryNext = () => {
+                    if (index >= paths.length) {
+                        attempt++;
+                        if (attempt < maxAttempts) {
+                            setTimeout(tryLoad, 1500); // Retry every 1.5s
+                        } else {
+                            onMissing();
+                        }
+                        return;
+                    }
+                    const path = paths[index++];
+                    element.src = path + (attempt > 0 ? `?t=${Date.now()}` : '');
+                    if (element.tagName === 'VIDEO') element.load();
+                };
+
+                element.onload = onReady;
+                element.oncanplay = onReady;
+                element.onloadeddata = onReady;
+                element.onerror = tryNext;
+                if (element.tagName === 'VIDEO') element.addEventListener('playing', onReady, { once: true });
+                tryNext();
+            };
+
+            tryLoad();
+        }
+
+        if (sessionId) {
+            appContainer.classList.add('wide');
+            showAutomaticMode(sessionId);
+
+            // 10-Second Buffering Modal
+            setTimeout(() => {
+                const modal = document.getElementById('bufferingModal');
+                document.getElementById('modalCode').textContent = sessionId.toUpperCase();
+                const targetHost = tunnelUrl ? tunnelUrl.replace(/\/$/, '') : 'https://irise-photobooth.web.app';
+                document.getElementById('cloudViewerLink').href = `${targetHost}?code=${sessionId.toUpperCase()}`;
+                modal.classList.remove('hidden');
+            }, 10000);
+
+            document.getElementById('closeModalBtn').onclick = () => {
+                document.getElementById('bufferingModal').classList.add('hidden');
+            };
+        } else {
+            showSearchMode();
+        }
+
+        function showAutomaticMode(id) {
+            autoView.classList.remove('hidden');
+            const mediaBases = getMediaBaseCandidates();
+            const videoPaths = mediaBases.map(b => `${b}/videos/${id}.mp4`);
+            const photoPaths = mediaBases.map(b => `${b}/videos/${id}.png`);
+
+            const onVideoReady = () => {
+                loadingElement.classList.add('hidden');
+                videoElement.classList.remove('hidden');
+                downloadBtn.classList.remove('hidden');
+                downloadBtn.href = videoElement.currentSrc || videoElement.src;
+            };
+            setElementSourceWithFallback(videoElement, videoPaths, onVideoReady, () => {
+                loadingElement.innerHTML = `<p style="color:${ACCENT_COLOR};">Video unavailable</p>`;
+            });
+
+            const photoElement = document.getElementById('photo-player');
+            const loadingPhotoElement = document.getElementById('loading-photo');
+            const downloadPhotoBtn = document.getElementById('download-photo-btn');
+            const onPhotoReady = () => {
+                loadingPhotoElement.classList.add('hidden');
+                photoElement.classList.remove('hidden');
+                downloadPhotoBtn.classList.remove('hidden');
+                downloadPhotoBtn.href = photoElement.currentSrc || photoElement.src;
+            };
+            setElementSourceWithFallback(photoElement, photoPaths, onPhotoReady, () => {
+                loadingPhotoElement.innerHTML = `<p style="color:${ACCENT_COLOR};">Photo strip unavailable</p>`;
+            });
+        }
+
+        function showSearchMode() {
+            autoView.classList.add('hidden');
+            searchView.classList.remove('hidden');
+        }
+
+        searchBtn.onclick = () => performSearch(searchInput.value.trim().toUpperCase());
+
+        async function performSearch(code) {
+            if (code.length < 5) {
+                searchStatus.textContent = 'Please enter a valid 5-character code.';
+                searchStatus.style.color = ACCENT_COLOR;
+                return;
+            }
+            searchBtn.disabled = true;
+            searchBtn.querySelector('span').textContent = 'Searching...';
+            searchStatus.textContent = 'Looking up archive...';
+            searchStatus.style.color = '';
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?code=${code}`);
+                const data = await response.json();
+
+                if (data.success && data.videoUrl) {
+                    searchStatus.textContent = 'Memories found!';
+                    searchStatus.style.color = THEME === 'classroom' ? '#3E7A54' : '#10b981';
+
+                    const resultsContainer = document.getElementById('search-results');
+                    resultsContainer.innerHTML = '';
+                    appContainer.classList.add('wide');
+
+                    if (data.photoUrl) {
+                        const mediaGrid = document.createElement('div');
+                        mediaGrid.className = 'media-grid';
+
+                        // Video
+                        const videoItem = document.createElement('div');
+                        videoItem.className = 'media-item';
+                        const videoCard = document.createElement('div');
+                        videoCard.className = 'media-container-box';
+                        if (data.videoUrl.includes('drive.google.com')) {
+                            const fileId = data.videoUrl.split('id=')[1] || data.videoUrl.split('/d/')[1]?.split('/')[0];
+                            const iframe = document.createElement('iframe');
+                            iframe.src = `https://drive.google.com/file/d/${fileId}/preview`;
+                            iframe.allow = 'autoplay';
+                            videoCard.appendChild(iframe);
+                        } else {
+                            const vid = document.createElement('video');
+                            vid.src = data.videoUrl; vid.controls = true; vid.playsInline = true;
+                            videoCard.appendChild(vid);
+                        }
+                        const videoDl = document.createElement('a');
+                        videoDl.href = data.videoUrl.includes('drive.google.com')
+                            ? `https://drive.google.com/uc?export=download&id=${data.videoUrl.split('id=')[1] || data.videoUrl.split('/d/')[1]?.split('/')[0]}`
+                            : data.videoUrl;
+                        videoDl.download = `iRISE_${code}.mp4`;
+                        videoDl.className = 'btn-secondary';
+                        videoDl.innerHTML = `<i class="hgi-stroke hgi-download-04"></i><span>Save Video</span>`;
+                        videoItem.appendChild(videoCard);
+                        videoItem.appendChild(videoDl);
+                        mediaGrid.appendChild(videoItem);
+
+                        // Photo
+                        const photoItem = document.createElement('div');
+                        photoItem.className = 'media-item';
+                        const photoCard = document.createElement('div');
+                        photoCard.className = 'media-container-box';
+                        const photoImg = document.createElement('img');
+                        photoImg.src = data.photoUrl.includes('drive.google.com')
+                            ? `https://lh3.googleusercontent.com/d/${data.photoUrl.split('id=')[1] || data.photoUrl.split('/d/')[1]?.split('/')[0]}`
+                            : data.photoUrl;
+                        photoImg.alt = 'Photo Strip';
+                        photoCard.appendChild(photoImg);
+                        const photoDl = document.createElement('a');
+                        photoDl.href = data.photoUrl.includes('drive.google.com')
+                            ? `https://drive.google.com/uc?export=download&id=${data.photoUrl.split('id=')[1] || data.photoUrl.split('/d/')[1]?.split('/')[0]}`
+                            : data.photoUrl;
+                        photoDl.download = `iRISE_${code}.png`;
+                        photoDl.className = 'btn-primary';
+                        photoDl.innerHTML = `<i class="hgi-stroke hgi-image-01"></i><span>Save Photo Strip</span>`;
+                        photoItem.appendChild(photoCard);
+                        photoItem.appendChild(photoDl);
+                        mediaGrid.appendChild(photoItem);
+                        resultsContainer.appendChild(mediaGrid);
+                    } else {
+                        const card = document.createElement('div');
+                        card.className = 'media-container-box';
+                        if (data.videoUrl.includes('drive.google.com')) {
+                            const fileId = data.videoUrl.split('id=')[1] || data.videoUrl.split('/d/')[1]?.split('/')[0];
+                            const iframe = document.createElement('iframe');
+                            iframe.src = `https://drive.google.com/file/d/${fileId}/preview`;
+                            iframe.allow = 'autoplay';
+                            card.appendChild(iframe);
+                        } else {
+                            const vid = document.createElement('video');
+                            vid.src = data.videoUrl; vid.controls = true; vid.playsInline = true;
+                            card.appendChild(vid);
+                        }
+                        const dl = document.createElement('a');
+                        dl.href = data.videoUrl.includes('drive.google.com')
+                            ? `https://drive.google.com/uc?export=download&id=${data.videoUrl.split('id=')[1] || data.videoUrl.split('/d/')[1]?.split('/')[0]}`
+                            : data.videoUrl;
+                        dl.download = `iRISE_${code}.mp4`;
+                        dl.className = 'btn-primary';
+                        dl.style.marginTop = '16px';
+                        dl.innerHTML = `<i class="hgi-stroke hgi-download-04"></i><span>Save Video</span>`;
+                        resultsContainer.appendChild(card);
+                        resultsContainer.appendChild(dl);
+                    }
+
+                    const backBtn = document.createElement('button');
+                    backBtn.className = 'btn-secondary';
+                    backBtn.style.marginTop = '24px';
+                    backBtn.innerHTML = `<i class="hgi-stroke hgi-refresh"></i><span>Search Another</span>`;
+                    backBtn.onclick = () => location.reload();
+                    resultsContainer.appendChild(backBtn);
+                    resultsContainer.classList.remove('hidden');
+                    document.getElementById('driveLink').href = data.videoUrl.replace('export=download', 'export=view');
+                    document.getElementById('video-fallback').classList.remove('hidden');
+                    document.querySelector('.input-group').classList.add('hidden');
+                    searchStatus.classList.add('hidden');
+                } else {
+                    searchStatus.textContent = `Code ${code} not found.`;
+                    searchStatus.style.color = ACCENT_COLOR;
+                }
+            } catch (err) {
+                searchStatus.textContent = 'Search unavailable.';
+                searchStatus.style.color = ACCENT_COLOR;
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.querySelector('span').textContent = 'Find Media';
+            }
+        }
+        searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchBtn.click(); });
+    </script>
+</body>
+
+</html>
