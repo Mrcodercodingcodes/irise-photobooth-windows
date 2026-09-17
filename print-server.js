@@ -43,6 +43,7 @@ loadLocalEnv();
 ffmpeg.setFfmpegPath(ffmpegStatic);
 
 const app = express();
+app.disable('x-powered-by');
 const configuredPort = Number.parseInt(process.env.PORT || '8080', 10);
 const port = Number.isInteger(configuredPort) && configuredPort > 0 && configuredPort <= 65535
     ? configuredPort
@@ -67,6 +68,10 @@ if (!fs.existsSync(videoDir)) fs.mkdirSync(videoDir);
 // ==========================================
 
 const FIREBASE_VIEW_URL = 'https://irise-photobooth.web.app/view';
+const FIREBASE_ORIGINS = new Set([
+    new URL(FIREBASE_VIEW_URL).origin,
+    'https://irise-photobooth.firebaseapp.com'
+]);
 const CONFIG_FILE = path.join(__dirname, '.tunnel-config.json');
 
 let PUBLIC_URL = '';
@@ -97,13 +102,43 @@ function persistPublicUrl() {
 }
 if (discardSavedTunnelUrl) persistPublicUrl();
 
-const getBaseUrl = () => FIREBASE_VIEW_URL;
+function isTrustedOrigin(origin) {
+    if (!origin) return true;
+    try {
+        const parsed = new URL(origin);
+        if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+        if (FIREBASE_ORIGINS.has(parsed.origin)) return true;
+        if (normalizeViewerBase(PUBLIC_URL) === parsed.origin) return true;
+        if (['localhost', '127.0.0.1', '::1'].includes(parsed.hostname)) return true;
+        return /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(parsed.hostname);
+    } catch (e) {
+        return false;
+    }
+}
+
+function requireTrustedOrigin(req, res, next) {
+    const origin = req.get('origin');
+    const localHost = ['localhost', '127.0.0.1', '::1'].includes(req.hostname);
+    if ((!origin && localHost) || isTrustedOrigin(origin)) return next();
+    return res.status(403).json({ error: 'Untrusted request origin' });
+}
+
+const getBaseUrl = () => new URL(FIREBASE_VIEW_URL).origin;
+
+function isSafeSkinReference(value) {
+    return typeof value === 'string'
+        && value.length > 0
+        && value.length <= 120
+        && path.basename(value) === value
+        && /^[A-Za-z0-9._-]+$/.test(value);
+}
 
 // Resolves a "skin" reference from the frontend into {designPath, rawPath}.
 // Checks active skins and automatically creates an emergency fallback frame
 // if no skin PNG file exists on the server.
 function resolveSkinPaths(skinRef) {
-    const clean = (skinRef && skinRef !== 'undefined' && skinRef !== 'null') ? skinRef : '';
+    const requested = (skinRef && skinRef !== 'undefined' && skinRef !== 'null') ? String(skinRef) : '';
+    const clean = isSafeSkinReference(requested) ? requested : '';
 
     if (clean) {
         const skin = skinStore.getSkin(clean);
@@ -216,7 +251,8 @@ async function generateLocalLink(sessionId, req, requestedBase = '') {
     const viewerBase = normalizeViewerBase(requestedBase);
     const isLocalRequest = requestBase && ['localhost', '127.0.0.1', '::1'].includes(new URL(requestBase).hostname);
     const isKnownViewerBase = viewerBase && (viewerBase === requestBase || viewerBase === publicBase);
-    const baseUrl = (isKnownViewerBase && viewerBase) || (isLocalRequest && publicBase) || requestBase || publicBase || `http://localhost:${port}`;
+    const isKnownRequestBase = requestBase && (isLocalRequest || requestBase === publicBase);
+    const baseUrl = (isKnownViewerBase && viewerBase) || (isLocalRequest && publicBase) || (isKnownRequestBase && requestBase) || publicBase || getBaseUrl() || `http://localhost:${port}`;
     const viewerUrl = `${baseUrl}/view.html`;
     return sessionId ? `${viewerUrl}?id=${encodeURIComponent(sessionId)}` : viewerUrl;
 }
@@ -224,9 +260,21 @@ async function generateLocalLink(sessionId, req, requestedBase = '') {
 // ==========================================
 // MIDDLEWARE
 // ==========================================
-app.use(cors());
-app.use(bodyParser.json({ limit: '100mb' }));
-app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
+app.use(cors({
+    origin(origin, callback) {
+        callback(null, isTrustedOrigin(origin));
+    },
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'x-admin-token']
+}));
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    next();
+});
+app.use(bodyParser.json({ limit: '25mb' }));
+app.use(bodyParser.urlencoded({ limit: '1mb', extended: false }));
 
 // Endpoint to get config dynamically
 app.get('/config', (req, res) => {
@@ -234,7 +282,7 @@ app.get('/config', (req, res) => {
 });
 
 // Endpoint to update config dynamically
-app.post('/update-config', (req, res) => {
+app.post('/update-config', requireTrustedOrigin, (req, res) => {
     if (!req.body) return res.status(400).json({ error: 'No request body' });
 
     const { publicUrl } = req.body;
@@ -271,19 +319,42 @@ app.get('/queue', (req, res) => {
 // Set a real password via env var before exposing this server past localhost.
 // Falls back to a generated one printed at boot so it's never silently blank.
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || crypto.randomBytes(9).toString('base64url');
-const adminTokens = new Set(); // simple in-memory session tokens, cleared on restart
+const ADMIN_TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
+const MAX_ADMIN_TOKENS = 100;
+const adminTokens = new Map(); // token -> expiry, cleared on restart
+const loginAttempts = new Map(); // client -> recent attempt timestamps
 
 function requireAdmin(req, res, next) {
-    const token = req.get('x-admin-token') || req.query.token;
-    if (token && adminTokens.has(token)) return next();
+    if (!isTrustedOrigin(req.get('origin'))) return res.status(403).json({ error: 'Untrusted request origin' });
+    const token = req.get('x-admin-token');
+    const expiresAt = token && adminTokens.get(token);
+    if (expiresAt && expiresAt > Date.now()) return next();
+    if (token) adminTokens.delete(token);
     res.status(401).json({ error: 'Unauthorized' });
 }
 
-app.post('/admin/login', (req, res) => {
+app.post('/admin/login', requireTrustedOrigin, (req, res) => {
     const { password } = req.body || {};
-    if (password && password === ADMIN_PASSWORD) {
+    const clientKey = req.ip || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    const recentAttempts = (loginAttempts.get(clientKey) || []).filter(timestamp => now - timestamp < 15 * 60 * 1000);
+    if (recentAttempts.length >= 10) {
+        return res.status(429).json({ error: 'Too many login attempts. Try again later.' });
+    }
+    recentAttempts.push(now);
+    loginAttempts.set(clientKey, recentAttempts);
+
+    const expected = Buffer.from(ADMIN_PASSWORD);
+    const supplied = Buffer.from(typeof password === 'string' ? password : '');
+    const passwordMatches = expected.length === supplied.length && crypto.timingSafeEqual(expected, supplied);
+    if (passwordMatches) {
+        loginAttempts.delete(clientKey);
         const token = crypto.randomBytes(24).toString('base64url');
-        adminTokens.add(token);
+        if (adminTokens.size >= MAX_ADMIN_TOKENS) {
+            const oldest = [...adminTokens.entries()].sort((a, b) => a[1] - b[1])[0];
+            if (oldest) adminTokens.delete(oldest[0]);
+        }
+        adminTokens.set(token, Date.now() + ADMIN_TOKEN_TTL_MS);
         return res.json({ success: true, token });
     }
     res.status(401).json({ error: 'Incorrect password' });
@@ -295,7 +366,7 @@ app.get('/admin/verify', requireAdmin, (req, res) => res.json({ valid: true }));
 // SESSION & UTILS
 // ==========================================
 let recentSessions = [];
-let sessionDataStore = {}; // sessionId -> { qrBuffer, viewerUrl }
+let sessionDataStore = Object.create(null); // sessionId -> { qrBuffer, viewerUrl }
 
 // Persist sessions so a restart doesn't invalidate QR codes / /sessions.
 const SESSIONS_FILE = path.join(__dirname, 'sessions.json');
@@ -412,14 +483,21 @@ async function getQrArea(templatePath, configuredArea = null, outputWidth = 0, o
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
+    filename: (req, file, cb) => {
+        const extension = path.extname(path.basename(file.originalname || '')).toLowerCase().replace(/[^a-z0-9.]/g, '').slice(0, 10);
+        cb(null, `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${extension}`);
+    }
 });
 
 const upload = multer({
     storage,
     limits: {
         fileSize: 50 * 1024 * 1024,
-        fieldSize: 10 * 1024 * 1024
+        fieldSize: 10 * 1024 * 1024,
+        files: 16,
+        fields: 20,
+        parts: 40,
+        headerPairs: 2000
     }
 });
 
@@ -431,7 +509,51 @@ const upload = multer({
 // rectangles. Public listing is read-only; creating/deleting requires the
 // admin token from /admin/login.
 
-const skinUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
+const skinUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 25 * 1024 * 1024,
+        files: 2,
+        fields: 10,
+        parts: 20,
+        headerPairs: 2000
+    }
+});
+
+function removeUploadedFiles(files) {
+    for (const file of files || []) {
+        if (file?.path) {
+            try { fs.unlinkSync(file.path); } catch (e) {}
+        }
+    }
+}
+
+function handleVideoUpload(req, res, next) {
+    upload.any()(req, res, (err) => {
+        if (err) {
+            removeUploadedFiles(req.files);
+            return next(err);
+        }
+        next();
+    });
+}
+
+function validateSlotArray(slots, width, height, label) {
+    if (!Array.isArray(slots) || slots.length === 0 || slots.length > 32) {
+        throw new Error(`${label} must contain between 1 and 32 slots`);
+    }
+    return slots.map((slot) => {
+        const values = ['x', 'y', 'w', 'h'].map(key => Number(slot?.[key]));
+        if (values.some(value => !Number.isInteger(value))) {
+            throw new Error(`${label} contains non-integer slot bounds`);
+        }
+        const [x, y, w, h] = values;
+        if (x < 0 || y < 0 || w <= 0 || h <= 0 || x + w > width || y + h > height) {
+            throw new Error(`${label} contains out-of-bounds slot bounds`);
+        }
+        return { x, y, w, h };
+    });
+}
 
 // Public: list all enabled skins for the picker UI
 app.get('/skins', (req, res) => {
@@ -529,14 +651,19 @@ app.patch('/admin/skins/:id', requireAdmin, (req, res) => {
 // ==========================================
 // 1. PRINT ENDPOINT
 // ==========================================
-app.post('/print', async (req, res) => {
-    const { image, sessionId, skin, autoPrint } = req.body;
+app.post('/print', requireTrustedOrigin, async (req, res) => {
+    const { image, sessionId, skin, autoPrint } = req.body || {};
     console.log(`[iRISE] Print Request: session=${sessionId}, skin=${skin}, autoPrint=${autoPrint}`);
 
-    if (!image) return res.status(400).send('No image data');
+    if (typeof image !== 'string' || !image.startsWith('data:image/png;base64,')) {
+        return res.status(400).send('No valid PNG image data');
+    }
+    if (sessionId !== undefined && sessionId !== null && sessionId !== '' && !/^[A-Za-z0-9_-]{1,64}$/.test(String(sessionId))) {
+        return res.status(400).send('Invalid session ID');
+    }
 
     try {
-        const base64Data = image.replace(/^data:image\/png;base64,/, "");
+        const base64Data = image.slice('data:image/png;base64,'.length);
         const fileName = `print_${Date.now()}.png`;
         const filePath = path.join(tempDir, fileName);
 
@@ -616,23 +743,64 @@ app.post('/print', async (req, res) => {
 // ==========================================
 // 2. FFMPEG VIDEO PROCESSING ENDPOINT
 // ==========================================
-app.post('/process-video', upload.any(), async (req, res) => {
+app.post('/process-video', requireTrustedOrigin, handleVideoUpload, async (req, res) => {
     const cleanupUploads = () => {
-        const bursts = req.files ? req.files.filter(f => f.fieldname === 'bursts') : [];
-        const photoFile = req.files ? req.files.find(f => f.fieldname === 'photo') : null;
-        bursts.forEach(f => { try { fs.unlinkSync(f.path); } catch (e) { } });
-        if (photoFile) { try { fs.unlinkSync(photoFile.path); } catch (e) { } }
+        removeUploadedFiles(req.files);
     };
     let slotAcquired = false;
     const releaseOnce = () => { if (slotAcquired) { slotAcquired = false; releaseVideoSlot(); } };
     req.on('close', () => { if (!res.writableFinished) releaseOnce(); });
     try {
-        const { skin, skinB, slots, slotsB, mirror, mode, sessionId, ffmpegPreset, ffmpegCrf, isDouble, skinWidth, skinHeight, viewerBase } = req.body;
+        const { skin, skinB, slots, slotsB, mirror, sessionId, ffmpegPreset, ffmpegCrf, isDouble, viewerBase } = req.body || {};
         const bursts = req.files ? req.files.filter(f => f.fieldname === 'bursts') : [];
         const photoFile = req.files ? req.files.find(f => f.fieldname === 'photo') : null;
 
         if (!bursts || bursts.length === 0) return res.status(400).send('No video files provided');
+        if (bursts.length > 8 || (req.files || []).some(file => !['bursts', 'photo'].includes(file.fieldname)) || (req.files || []).filter(file => file.fieldname === 'photo').length > 1) {
+            cleanupUploads();
+            return res.status(400).send('Invalid video upload fields');
+        }
         if (!slots) return res.status(400).send('No slot coordinates provided');
+        if (sessionId !== undefined && sessionId !== null && sessionId !== '' && !/^[A-Za-z0-9_-]{1,64}$/.test(String(sessionId))) {
+            cleanupUploads();
+            return res.status(400).send('Invalid session ID');
+        }
+
+        let slotData;
+        let slotDataB;
+        try {
+            slotData = JSON.parse(slots);
+            slotDataB = slotsB ? JSON.parse(slotsB) : slotData;
+        } catch (parseError) {
+            cleanupUploads();
+            return res.status(400).send('Invalid slot coordinates');
+        }
+
+        const isDoubleStrip = isDouble === 'true';
+        const skinInfo = resolveSkinPaths(skin);
+        const skinInfoB = resolveSkinPaths(skinB || skin);
+        const skinPath = skinInfo.designPath.replace(/\\/g, '/');
+        const skinPathB = skinInfoB.designPath.replace(/\\/g, '/');
+
+        let sWidth = 0;
+        let sHeight = 0;
+        try {
+            const skinMeta = await sharp(skinPath).metadata();
+            sWidth = skinMeta.width || 0;
+            sHeight = skinMeta.height || 0;
+        } catch (metadataError) {}
+        if (!sWidth || !sHeight) {
+            sWidth = 300;
+            sHeight = 900;
+        }
+
+        try {
+            slotData = validateSlotArray(slotData, sWidth, sHeight, 'slots');
+            slotDataB = isDoubleStrip ? validateSlotArray(slotDataB, sWidth, sHeight, 'slotsB') : slotData;
+        } catch (validationError) {
+            cleanupUploads();
+            return res.status(400).send(validationError.message);
+        }
 
         try {
             await acquireVideoSlot();
@@ -642,12 +810,6 @@ app.post('/process-video', upload.any(), async (req, res) => {
         }
         slotAcquired = true;
         console.log(`[iRISE] Video job ${sessionId || '(no id)'} started (active=${activeVideoJobs}, queued=${videoQueueDepth()})`);
-
-        let slotData = JSON.parse(slots);
-        let slotDataB = slotsB ? JSON.parse(slotsB) : slotData;
-
-        const skinPath = resolveSkinPaths(skin).designPath.replace(/\\/g, '/');
-        const skinPathB = resolveSkinPaths(skinB || skin).designPath.replace(/\\/g, '/');
 
         // videoDir is declared once near the top of the file (private_videos/,
         // outside public/, served via the dedicated /videos/:file route below)
@@ -665,7 +827,6 @@ app.post('/process-video', upload.any(), async (req, res) => {
 
         // 1. Input 0 is the left SKIN (determines the video resolution)
         command.input(skinPath);
-        const isDoubleStrip = isDouble === 'true';
         if (isDoubleStrip) {
             command.input(skinPathB);
         }
@@ -676,20 +837,6 @@ app.post('/process-video', upload.any(), async (req, res) => {
         let filterParts = [];
         const hflip = (mirror === 'true') ? 'hflip,' : '';
 
-        // Read real skin dimensions from the PNG (don't trust client-sent values)
-        let sWidth = parseInt(skinWidth) || 0;
-        let sHeight = parseInt(skinHeight) || 0;
-        if (!sWidth || !sHeight) {
-            try {
-                const skinMeta = await sharp(skinPath).metadata();
-                sWidth = skinMeta.width || 300;
-                sHeight = skinMeta.height || 900;
-            } catch (e) {
-                sWidth = 300;
-                sHeight = 900;
-            }
-        }
-        
         let activeSlots = [...slotData];
         if (isDoubleStrip) {
             // Add the right strip's own slots shifted by the skin width.
@@ -746,8 +893,10 @@ app.post('/process-video', upload.any(), async (req, res) => {
             ])
             .map('[final]');
 
-        const preset = ffmpegPreset || 'veryfast';
-        const crf = ffmpegCrf || '18';
+        const allowedPresets = new Set(['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium']);
+        const preset = allowedPresets.has(String(ffmpegPreset)) ? String(ffmpegPreset) : 'veryfast';
+        const parsedCrf = Number(ffmpegCrf);
+        const crf = Number.isInteger(parsedCrf) && parsedCrf >= 0 && parsedCrf <= 51 ? String(parsedCrf) : '18';
 
         command.outputOptions([
             '-c:v libx264',
@@ -808,8 +957,7 @@ app.post('/process-video', upload.any(), async (req, res) => {
                 persistSessions();
 
                 // Clean up all temporary uploaded files
-                bursts.forEach(f => { try { fs.unlinkSync(f.path); } catch (e) { } });
-                if (photoFile) { try { fs.unlinkSync(photoFile.path); } catch (e) { } }
+                removeUploadedFiles(req.files);
 
                 releaseOnce();
                 if (!res.writableFinished) res.json({ success: true, url: sessionUrl, viewerUrl: viewerUrl });
@@ -818,8 +966,7 @@ app.post('/process-video', upload.any(), async (req, res) => {
                 console.error('[iRISE] FFmpeg error:', err.message);
 
                 // Clean up all temporary uploaded files on error
-                bursts.forEach(f => { try { fs.unlinkSync(f.path); } catch (e) { } });
-                if (photoFile) { try { fs.unlinkSync(photoFile.path); } catch (e) { } }
+                removeUploadedFiles(req.files);
 
                 releaseOnce();
                 if (!res.writableFinished) res.status(500).json({ error: 'Video processing failed' });
@@ -865,13 +1012,25 @@ app.use('/exports', express.static(exportDir, staticOpts));
 // session filename (e.g. from a QR code or the /sessions list).
 app.get('/videos/:file', (req, res) => {
     const file = req.params.file;
-    if (file.includes('..') || file.includes('/')) return res.status(400).end();
+    if (!file || path.basename(file) !== file || !/^[A-Za-z0-9._-]+\.(mp4|png)$/i.test(file)) return res.status(400).end();
     const filePath = path.join(videoDir, file);
     if (!fs.existsSync(filePath)) return res.status(404).end();
     res.sendFile(filePath);
 });
 
-app.get('/sessions', (req, res) => res.json(recentSessions));
+app.get('/sessions', requireAdmin, (req, res) => res.json(recentSessions));
+
+app.use((err, req, res, next) => {
+    if (res.headersSent) return next(err);
+    if (err instanceof SyntaxError && err.status === 400 && Object.prototype.hasOwnProperty.call(err, 'body')) {
+        return res.status(400).json({ error: 'Invalid JSON request body' });
+    }
+    if (err instanceof multer.MulterError) {
+        return res.status(400).json({ error: 'Upload rejected: request limits exceeded' });
+    }
+    console.error('[iRISE] Request error:', err.message);
+    res.status(500).json({ error: 'Request failed' });
+});
 
 const server = app.listen(port, '0.0.0.0', () => {
     console.log(`\n========================================`);

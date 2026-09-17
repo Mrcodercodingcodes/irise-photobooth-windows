@@ -8,8 +8,7 @@ const requiredPackages = [
     'multer',
     'fluent-ffmpeg',
     'qrcode',
-    'sharp',
-    '@snap/camera-kit'
+    'sharp'
 ];
 
 for (const packageName of requiredPackages) {
