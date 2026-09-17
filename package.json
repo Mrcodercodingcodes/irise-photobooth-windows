@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node print-server.js",
     "dev": "node --watch print-server.js",
-    "check": "node --check print-server.js && node --check lib/slotDetection.js && node --check lib/skinStore.js && node --check scan-slots.js && node --check analyze-slots.js && node --check migrate-legacy-skins.js",
+    "check": "node --check print-server.js && node --check lib/slotDetection.js && node --check lib/skinStore.js && node --check scan-slots.js && node --check analyze-slots.js && node --check migrate-legacy-skins.js && node --check scripts/verify-install.js && node --check public/js/app.js && node --check public/js/core/api.js && node --check public/js/core/renderer.js",
     "verify:install": "node scripts/verify-install.js",
     "pm2:start": "pm2 start ecosystem.config.js",
     "pm2:stop": "pm2 stop irise-photobooth",

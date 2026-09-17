@@ -178,6 +178,25 @@
       border-radius: 3px;
       font-family: 'EB Garamond', serif;
     }
+    .qr-box {
+      position: absolute;
+      border: 2px solid #c62828;
+      background: rgba(198, 40, 40, 0.16);
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+    .qr-box .qr-label {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: #c62828;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-family: 'EB Garamond', serif;
+    }
     .slot-count-note { font-size: 14px; color: var(--ink-light); margin: 12px 0; }
     .preview-actions { display: flex; gap: 12px; margin-top: 20px; }
 
@@ -226,7 +245,7 @@
     <div class="wrap">
       <div class="eyebrow">iRISE Photobooth</div>
       <h1>Skin Manager</h1>
-      <p class="sub">Upload a blueprint (white/transparent = photo slots) and its matching design art. The server detects slot positions automatically — confirm or nudge them, then save.</p>
+      <p class="sub">Upload a blueprint (white/transparent = photo slots, red square = exact QR position and size) and its matching design art. The server detects both automatically — confirm or nudge the slots, then save.</p>
 
       <!-- Upload panel -->
       <div class="panel">
@@ -237,7 +256,7 @@
           <div>
             <div class="dropzone" id="rawDropzone">
               <div class="dz-label">Raw blueprint</div>
-              <div class="dz-hint">white/transparent = photo slots<br>click or drag a PNG</div>
+              <div class="dz-hint">white/transparent = photo slots<br>red square = QR position and size<br>click or drag a PNG</div>
             </div>
             <input type="file" id="rawInput" accept="image/png" style="display:none;">
           </div>
@@ -289,7 +308,7 @@
 
     let adminToken = sessionStorage.getItem('irise_admin_token') || '';
     let rawFile = null, designFile = null;
-    let lastPreview = null; // { width, height, slots }
+    let lastPreview = null; // { width, height, slots, qrCode }
 
     /* ---------- login ---------- */
     async function tryLogin() {
@@ -435,11 +454,24 @@
           box.innerHTML = `<span class="slot-num">${i + 1}</span>`;
           wrap.appendChild(box);
         });
+
+        if (data.qrCode) {
+          const qrBox = document.createElement('div');
+          qrBox.className = 'qr-box';
+          qrBox.style.left = (data.qrCode.x / data.width * 100) + '%';
+          qrBox.style.top = (data.qrCode.y / data.height * 100) + '%';
+          qrBox.style.width = (data.qrCode.w / data.width * 100) + '%';
+          qrBox.style.height = (data.qrCode.h / data.height * 100) + '%';
+          qrBox.innerHTML = '<span class="qr-label">QR</span>';
+          wrap.appendChild(qrBox);
+        }
       };
 
       document.getElementById('slotCountNote').textContent =
         `${data.slots.length} slot${data.slots.length === 1 ? '' : 's'} detected at ${data.width}×${data.height}px. ` +
-        `If this looks wrong, check that slot areas in the raw image are pure white or fully transparent, then re-upload.`;
+        (data.qrCode
+          ? `QR marker detected at ${data.qrCode.x},${data.qrCode.y} (${data.qrCode.w}×${data.qrCode.h}px).`
+          : 'No red QR marker detected; the default bottom-right QR position will be used.');
 
       document.getElementById('previewSection').style.display = 'block';
       document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -468,6 +500,7 @@
         formData.append('width', lastPreview.width);
         formData.append('height', lastPreview.height);
         formData.append('slots', JSON.stringify(lastPreview.slots));
+        formData.append('qrCode', JSON.stringify(lastPreview.qrCode || null));
 
         const res = await fetch(getServerUrl('/admin/skins'), {
           method: 'POST',
@@ -490,7 +523,7 @@
 
     function resetUploadForm() {
       rawFile = null; designFile = null; lastPreview = null;
-      document.getElementById('rawDropzone').innerHTML = '<div class="dz-label">Raw blueprint</div><div class="dz-hint">white/transparent = photo slots<br>click or drag a PNG</div>';
+      document.getElementById('rawDropzone').innerHTML = '<div class="dz-label">Raw blueprint</div><div class="dz-hint">white/transparent = photo slots<br>red square = QR position and size<br>click or drag a PNG</div>';
       document.getElementById('designDropzone').innerHTML = '<div class="dz-label">Design art</div><div class="dz-hint">the finished skin overlay<br>click or drag a PNG</div>';
       document.getElementById('skinNameInput').value = '';
       document.getElementById('rawInput').value = '';

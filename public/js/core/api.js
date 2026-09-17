@@ -189,7 +189,8 @@ export async function fetchSkinDesigns() {
       name: s.name,
       bg: s.rawUrl.startsWith('http') ? s.rawUrl : getServerUrl(s.rawUrl),
       fg: s.designUrl.startsWith('http') ? s.designUrl : getServerUrl(s.designUrl),
-      slots: s.slots
+      slots: s.slots,
+      qrCode: s.qrCode || null
     }));
   } catch (err) {
     logTerminal(`Skin fetch failed (${err.message}). Using built-in presets.`, 'warn');

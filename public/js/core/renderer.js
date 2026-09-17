@@ -56,8 +56,21 @@ export function loadImage(src, isRaw = false) {
   });
 }
 
-export function drawStripQr(ctx, canvas, qrCanvas) {
+export function drawStripQr(ctx, canvas, qrCanvas, qrCode = null, baseW = 0, baseH = 0) {
   if (!qrCanvas) return;
+
+  if (qrCode && qrCode.w > 0 && qrCode.h > 0 && baseW > 0 && baseH > 0) {
+    const scaleX = canvas.width / baseW;
+    const scaleY = canvas.height / baseH;
+    ctx.drawImage(
+      qrCanvas,
+      Math.round(qrCode.x * scaleX),
+      Math.round(qrCode.y * scaleY),
+      Math.round(qrCode.w * scaleX),
+      Math.round(qrCode.h * scaleY)
+    );
+    return;
+  }
 
   const SCALE_FACTOR = 4;
   const QR_SIZE = 80 * SCALE_FACTOR;
@@ -155,7 +168,7 @@ export async function renderSingleStrip({ selectedPhotos, canvas, design, qrCanv
 
   // 4. Draw QR Code
   if (qrCanvas) {
-    drawStripQr(ctx, canvas, qrCanvas);
+    drawStripQr(ctx, canvas, qrCanvas, effectiveDesign.qrCode, baseW, baseH);
   }
 
   return canvas;

@@ -108,7 +108,12 @@ function resolveSkinPaths(skinRef) {
     if (clean) {
         const skin = skinStore.getSkin(clean);
         if (skin && fs.existsSync(skin.designPath)) {
-            return { designPath: skin.designPath, rawPath: skin.rawPath, slots: skin.slots };
+            return {
+                designPath: skin.designPath,
+                rawPath: skin.rawPath,
+                slots: skin.slots,
+                qrCode: skin.qrCode || null
+            };
         }
 
         // Direct check in public/skins/{clean}/design.png
@@ -117,7 +122,8 @@ function resolveSkinPaths(skinRef) {
             return {
                 designPath: directSkinPath,
                 rawPath: path.join(__dirname, 'public', 'skins', clean, 'raw.png'),
-                slots: null
+                slots: null,
+                qrCode: null
             };
         }
 
@@ -125,7 +131,7 @@ function resolveSkinPaths(skinRef) {
         const legacyDesignPath = path.join(__dirname, 'public', clean);
         if (fs.existsSync(legacyDesignPath)) {
             const legacyRawPath = path.join(__dirname, 'public', clean.replace('design', 'raw'));
-            return { designPath: legacyDesignPath, rawPath: legacyRawPath, slots: null };
+            return { designPath: legacyDesignPath, rawPath: legacyRawPath, slots: null, qrCode: null };
         }
     }
 
@@ -134,7 +140,12 @@ function resolveSkinPaths(skinRef) {
     for (const s of skins) {
         const full = skinStore.getSkin(s.id);
         if (full && fs.existsSync(full.designPath)) {
-            return { designPath: full.designPath, rawPath: full.rawPath, slots: full.slots };
+            return {
+                designPath: full.designPath,
+                rawPath: full.rawPath,
+                slots: full.slots,
+                qrCode: full.qrCode || null
+            };
         }
     }
 
@@ -158,7 +169,8 @@ function resolveSkinPaths(skinRef) {
     return {
         designPath: fallbackDesign,
         rawPath: fallbackDesign,
-        slots: null
+        slots: null,
+        qrCode: null
     };
 }
 
@@ -352,20 +364,43 @@ function releaseVideoSlot() {
     if (next) { activeVideoJobs++; next(); }
 }
 
-// QR code: always bottom-right of the design, 80x80px with 5px edge padding
-async function getQrArea(templatePath) {
+// QR code placement is defined by a red square in the raw blueprint. Older
+// skins without a marker retain the historical bottom-right fallback.
+async function getQrArea(templatePath, configuredArea = null, outputWidth = 0, outputHeight = 0) {
     try {
         const metadata = await sharp(templatePath).metadata();
-        const QR_SIZE = 80;
-        const QR_PADDING = 25;
-        const area = {
-            x: metadata.width - QR_SIZE - QR_PADDING,
-            y: metadata.height - QR_SIZE - QR_PADDING,
-            w: QR_SIZE,
-            h: QR_SIZE
+
+        let area = configuredArea;
+        if (!area) {
+            try {
+                area = (await detectSlots(templatePath)).qrCode;
+            } catch (detectError) {
+                console.warn(`[iRISE] QR marker detection skipped: ${detectError.message}`);
+            }
+        }
+
+        if (!area) {
+            const QR_SIZE = 80;
+            const QR_PADDING = 25;
+            area = {
+                x: metadata.width - QR_SIZE - QR_PADDING,
+                y: metadata.height - QR_SIZE - QR_PADDING,
+                w: QR_SIZE,
+                h: QR_SIZE
+            };
+            console.log(`[iRISE] QR placement: legacy bottom-right ${QR_SIZE}x${QR_SIZE} at (${area.x}, ${area.y})`);
+        } else {
+            console.log(`[iRISE] QR placement: red marker ${area.w}x${area.h} at (${area.x}, ${area.y})`);
+        }
+
+        const scaleX = outputWidth && metadata.width ? outputWidth / metadata.width : 1;
+        const scaleY = outputHeight && metadata.height ? outputHeight / metadata.height : 1;
+        return {
+            x: Math.round(area.x * scaleX),
+            y: Math.round(area.y * scaleY),
+            w: Math.max(1, Math.round(area.w * scaleX)),
+            h: Math.max(1, Math.round(area.h * scaleY))
         };
-        console.log(`[iRISE] QR placement: bottom-right ${QR_SIZE}x${QR_SIZE} at (${area.x}, ${area.y})`);
-        return area;
     } catch (err) {
         console.error('[iRISE] Error reading template metadata:', err);
         // Fallback for a typical 4x6 strip at 300dpi (1200x1800)
@@ -413,7 +448,7 @@ app.post('/admin/skins/preview', requireAdmin, skinUpload.fields([{ name: 'raw',
         const designFile = req.files?.design?.[0];
         if (!rawFile || !designFile) return res.status(400).json({ error: 'Both raw and design images are required' });
 
-        const { width, height, slots } = await detectSlots(rawFile.buffer);
+        const { width, height, slots, qrCode } = await detectSlots(rawFile.buffer);
         if (slots.length === 0) {
             return res.status(422).json({ error: 'No photo slots detected — check that slot areas in the raw image are pure white or transparent' });
         }
@@ -423,6 +458,7 @@ app.post('/admin/skins/preview', requireAdmin, skinUpload.fields([{ name: 'raw',
             width,
             height,
             slots,
+            qrCode,
             rawPreview: `data:${rawFile.mimetype};base64,${rawFile.buffer.toString('base64')}`,
             designPreview: `data:${designFile.mimetype};base64,${designFile.buffer.toString('base64')}`
         });
@@ -450,13 +486,24 @@ app.post('/admin/skins', requireAdmin, skinUpload.fields([{ name: 'raw', maxCoun
         if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' });
         if (!Array.isArray(slots) || slots.length === 0) return res.status(400).json({ error: 'At least one slot is required' });
 
+        let qrCode = null;
+        try {
+            qrCode = JSON.parse(req.body.qrCode || 'null');
+        } catch (e) {
+            return res.status(400).json({ error: 'Invalid QR code marker JSON' });
+        }
+        if (qrCode && (!Number.isFinite(qrCode.x) || !Number.isFinite(qrCode.y) || !Number.isFinite(qrCode.w) || !Number.isFinite(qrCode.h) || qrCode.x < 0 || qrCode.y < 0 || qrCode.w <= 0 || qrCode.h <= 0)) {
+            return res.status(400).json({ error: 'Invalid QR code marker bounds' });
+        }
+
         const id = skinStore.createSkin({
             name: name.trim(),
             rawBuffer: rawFile.buffer,
             designBuffer: designFile.buffer,
             slots,
             width: parseInt(width, 10),
-            height: parseInt(height, 10)
+            height: parseInt(height, 10),
+            qrCode
         });
 
         console.log(`[iRISE] Skin created: ${id} (${slots.length} slots)`);
@@ -495,7 +542,7 @@ app.post('/print', async (req, res) => {
 
         let imageBuffer = Buffer.from(base64Data, 'base64');
 
-        const { designPath: skinPath, rawPath } = resolveSkinPaths(skin);
+        const { designPath: skinPath, rawPath, qrCode } = resolveSkinPaths(skin);
         let session = sessionDataStore[sessionId];
 
         if (!session) {
@@ -518,12 +565,13 @@ app.post('/print', async (req, res) => {
 
         if (session && session.qrBuffer) {
             console.log(`[iRISE] Applying QR code...`);
-            let redArea = await getQrArea(rawPath);
+            const outputMetadata = await sharp(imageBuffer).metadata();
+            let redArea = await getQrArea(rawPath, qrCode, outputMetadata.width, outputMetadata.height);
 
             console.log(`[iRISE] Final QR Placement: x:${redArea.x}, y:${redArea.y}, size:${redArea.w}x${redArea.h}`);
 
             const qrResized = await sharp(session.qrBuffer)
-                .resize(Math.max(100, redArea.w), Math.max(100, redArea.h))
+                .resize(redArea.w, redArea.h)
                 .toBuffer();
 
             imageBuffer = await sharp(imageBuffer)
