@@ -720,8 +720,9 @@
     <!-- Buffering Modal -->
     <div id="bufferingModal" class="modal-overlay hidden">
         <div class="modal-content">
-            <h3>Experiencing Buffering?</h3>
-            <p>You can access your media directly via our high-speed cloud viewer instead.</p>
+            <h3>Video not available yet</h3>
+            <p>The video is probably not uploaded, please come back later for updates!</p>
+            <p>If the connection is slow, you can also try the cloud viewer directly.</p>
             <p>Your unique code is <strong id="modalCodeWrap"><span id="modalCode"></span></strong> and will be applied
                 automatically.</p>
             <a id="cloudViewerLink" href="#" target="_blank" class="btn-primary" style="margin-top: 24px;">
@@ -795,7 +796,7 @@
                 </a>
             </div>
             <div id="search-status" class="status-msg">
-                Enter the 5-character code from your printout.
+                The video is probably not uploaded, please come back later for updates!
             </div>
         </main>
 
@@ -855,6 +856,8 @@
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
         const searchStatus = document.getElementById('search-status');
+        let videoReady = false;
+        let bufferingTimer = null;
 
         function getMediaBaseCandidates() {
             const bases = [];
@@ -895,21 +898,30 @@
             tryLoad();
         }
 
+        function showBufferingModal() {
+            if (!sessionId) return;
+            const modal = document.getElementById('bufferingModal');
+            document.getElementById('modalCode').textContent = sessionId.toUpperCase();
+            const targetHost = tunnelUrl ? tunnelUrl.replace(/\/$/, '') : 'https://irise-photobooth.web.app';
+            document.getElementById('cloudViewerLink').href = `${targetHost}?code=${sessionId.toUpperCase()}`;
+            modal.classList.remove('hidden');
+        }
+
+        function hideBufferingModal() {
+            document.getElementById('bufferingModal').classList.add('hidden');
+        }
+
         if (sessionId) {
             appContainer.classList.add('wide');
             showAutomaticMode(sessionId);
 
-            // 10-Second Buffering Modal
-            setTimeout(() => {
-                const modal = document.getElementById('bufferingModal');
-                document.getElementById('modalCode').textContent = sessionId.toUpperCase();
-                const targetHost = tunnelUrl ? tunnelUrl.replace(/\/$/, '') : 'https://irise-photobooth.web.app';
-                document.getElementById('cloudViewerLink').href = `${targetHost}?code=${sessionId.toUpperCase()}`;
-                modal.classList.remove('hidden');
+            // Only offer the fallback if the video is still unavailable after 10 seconds.
+            bufferingTimer = setTimeout(() => {
+                if (!videoReady) showBufferingModal();
             }, 10000);
 
             document.getElementById('closeModalBtn').onclick = () => {
-                document.getElementById('bufferingModal').classList.add('hidden');
+                hideBufferingModal();
             };
         } else {
             showSearchMode();
@@ -922,13 +934,20 @@
             const photoPaths = mediaBases.map(b => `${b}/videos/${id}.png`);
 
             const onVideoReady = () => {
+                videoReady = true;
+                if (bufferingTimer) {
+                    clearTimeout(bufferingTimer);
+                    bufferingTimer = null;
+                }
+                hideBufferingModal();
                 loadingElement.classList.add('hidden');
                 videoElement.classList.remove('hidden');
                 downloadBtn.classList.remove('hidden');
                 downloadBtn.href = videoElement.currentSrc || videoElement.src;
             };
             setElementSourceWithFallback(videoElement, videoPaths, onVideoReady, () => {
-                loadingElement.innerHTML = `<p style="color:${ACCENT_COLOR};">Video unavailable</p>`;
+                loadingElement.innerHTML = `<p style="color:${ACCENT_COLOR};">The video is probably not uploaded, please come back later for updates!</p>`;
+                showBufferingModal();
             });
 
             const photoElement = document.getElementById('photo-player');
@@ -1066,11 +1085,11 @@
                     document.querySelector('.input-group').classList.add('hidden');
                     searchStatus.classList.add('hidden');
                 } else {
-                    searchStatus.textContent = `Code ${code} not found.`;
+                    searchStatus.textContent = 'The video is probably not uploaded, please come back later for updates!';
                     searchStatus.style.color = ACCENT_COLOR;
                 }
             } catch (err) {
-                searchStatus.textContent = 'Search unavailable.';
+                searchStatus.textContent = 'The video is probably not uploaded, please come back later for updates!';
                 searchStatus.style.color = ACCENT_COLOR;
             } finally {
                 searchBtn.disabled = false;
